@@ -68,7 +68,7 @@ header p { font-size: 0.78rem; color: var(--text2); letter-spacing: 0.04em; }
 }
 .panel-label { font-size: 0.67rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 0.9rem; }
 
-.add-grid { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: flex-end; }
+.add-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: flex-end; }
 
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label { font-size: 0.67rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text2); }
@@ -90,13 +90,13 @@ header p { font-size: 0.78rem; color: var(--text2); letter-spacing: 0.04em; }
 .sug-ticker { font-weight: 500; color: var(--text); }
 .sug-name { color: var(--text3); font-size: 0.72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-input[type="text"], input[type="number"] {
+input[type="text"], input[type="number"], select {
   font-family: var(--mono); font-size: 0.88rem;
   background: var(--bg); border: 1px solid var(--border-mid); border-radius: 3px;
   padding: 8px 10px; color: var(--text); outline: none;
   transition: border-color 0.15s; width: 100%;
 }
-input:focus { border-color: var(--accent); }
+input:focus, select:focus { border-color: var(--accent); }
 
 button.add-btn {
   font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.04em;
@@ -107,6 +107,25 @@ button.add-btn {
 button.add-btn:hover { opacity: 0.85; }
 button.add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* ── Helper button ── */
+.helper-btn {
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em;
+  background: transparent; color: var(--text2); border: 1px solid var(--border-mid); border-radius: 3px;
+  padding: 6px 14px; cursor: pointer; white-space: nowrap;
+  transition: all 0.15s; margin-bottom: 1rem; display: inline-block;
+}
+.helper-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border-mid); }
+
+/* ── Action bar ── */
+.action-bar { display: none; justify-content: flex-end; gap: 8px; margin-bottom: 0.75rem; }
+.action-bar button {
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em;
+  background: transparent; color: var(--text2); border: 1px solid var(--border-mid); border-radius: 3px;
+  padding: 5px 12px; cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.action-bar button:hover { background: var(--surface2); color: var(--text); border-color: var(--border-mid); }
+
 /* ── Tags ── */
 .tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; min-height: 4px; }
 .tag {
@@ -115,8 +134,67 @@ button.add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   border: 1px solid var(--border); background: var(--surface); color: var(--text);
 }
 .tag-dot { width: 8px; height: 8px; border-radius: 1px; flex-shrink: 0; }
+.tag-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 0.9rem; line-height: 1; padding: 0 0 0 4px; font-family: var(--mono); }
+.tag-btn:hover { color: var(--accent); }
 .tag-remove { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 1rem; line-height: 1; padding: 0 0 0 2px; font-family: var(--mono); }
 .tag-remove:hover { color: var(--loss); }
+
+/* ── Modal ── */
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(24,20,13,0.6); z-index: 1000;
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border-mid); border-radius: 6px;
+  max-width: 600px; width: 100%; max-height: 90vh; overflow: hidden;
+  display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(24,20,13,0.3);
+}
+.modal-header {
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-title { font-family: var(--serif); font-size: 1.5rem; font-weight: 300; color: var(--text); }
+.modal-close {
+  background: none; border: none; font-size: 1.5rem; color: var(--text3);
+  cursor: pointer; padding: 0; line-height: 1; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; border-radius: 3px;
+  transition: all 0.15s;
+}
+.modal-close:hover { background: var(--surface2); color: var(--text); }
+.modal-body {
+  padding: 1.5rem; overflow-y: auto; flex: 1;
+}
+.modal-source {
+  font-size: 0.78rem; color: var(--text2); margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem; background: var(--surface2); border-radius: 3px;
+}
+.modal-source-ticker { font-weight: 500; color: var(--text); }
+.similar-list { display: flex; flex-direction: column; gap: 10px; }
+.similar-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+  transition: all 0.15s;
+}
+.similar-item:hover { border-color: var(--border-mid); background: var(--surface2); }
+.similar-info { flex: 1; min-width: 0; }
+.similar-ticker { font-weight: 500; font-size: 0.9rem; color: var(--text); margin-bottom: 2px; }
+.similar-meta { font-size: 0.72rem; color: var(--text3); }
+.similar-correlation {
+  font-family: var(--serif); font-size: 1.2rem; font-weight: 300;
+  color: var(--accent); min-width: 60px; text-align: right;
+}
+.similar-add-btn {
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em;
+  background: var(--accent); color: #fff; border: none; border-radius: 3px;
+  padding: 6px 12px; cursor: pointer; white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.similar-add-btn:hover { opacity: 0.85; }
+.similar-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.modal-loading { text-align: center; padding: 2rem; color: var(--text3); font-size: 0.85rem; }
+.modal-empty { text-align: center; padding: 2rem; color: var(--text2); font-size: 0.85rem; }
 
 /* ── Error / info ── */
 .error-bar {
@@ -158,7 +236,7 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 
 <div class="page">
   <header>
     <h1>shoulda</h1>
-    <p>Pick a year, an amount, and a stock. See what you could've won.</p>
+    <p>Pick a month, a year, an amount, and a stock. See what you could've won.</p>
   </header>
 
   <div id="loadScreen">
@@ -172,24 +250,46 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 
       <div class="panel-label">Add an investment</div>
       <div class="add-grid">
         <div class="field">
-          <label>Ticker or company name</label>
+          <label for="tickerIn">Ticker or company name</label>
           <div class="ticker-wrap">
             <input type="text" id="tickerIn" placeholder="e.g. AAPL, Apple, S&P 500…" autocomplete="off" />
             <div id="suggestions"></div>
           </div>
         </div>
         <div class="field">
-          <label>Start year</label>
+          <label for="monthIn">Start month</label>
+          <select id="monthIn">
+            <option value="01" selected>Jan</option>
+            <option value="02">Feb</option>
+            <option value="03">Mar</option>
+            <option value="04">Apr</option>
+            <option value="05">May</option>
+            <option value="06">Jun</option>
+            <option value="07">Jul</option>
+            <option value="08">Aug</option>
+            <option value="09">Sep</option>
+            <option value="10">Oct</option>
+            <option value="11">Nov</option>
+            <option value="12">Dec</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="yearIn">Start year</label>
           <input type="number" id="yearIn" min="1970" max="2024" value="2010" />
         </div>
         <div class="field">
-          <label>Amount (£)</label>
+          <label for="amountIn">Amount (£)</label>
           <input type="number" id="amountIn" min="1" value="1000" />
         </div>
         <button class="add-btn" id="addBtn" onclick="addInvestment()">Add →</button>
       </div>
     </div>
 
+    <button class="helper-btn" onclick="chooseForMe()">✨ Choose for me</button>
+
+    <div class="action-bar" id="actionBar">
+      <button onclick="clearAllInvestments()">Clear all</button>
+    </div>
     <div class="tags-row" id="tagsList"></div>
     <div class="error-bar" id="errMsg"></div>
 
@@ -205,6 +305,19 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 
   </div>
 </div>
 
+<!-- Similar Stocks Modal -->
+<div class="modal-overlay" id="similarModal" onclick="if(event.target === this) closeSimilarModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Similar Trends</div>
+      <button class="modal-close" onclick="closeSimilarModal()">×</button>
+    </div>
+    <div class="modal-body" id="similarBody">
+      <div class="modal-loading">Analyzing trends...</div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── State ────────────────────────────────────────────────────────────────────
 let DATA = {};       // full price data: { ticker: { name, data: { "YYYY-MM": price } } }
@@ -212,6 +325,12 @@ let META = {};       // lightweight: { ticker: { name, from, to } }
 let investments = [];
 let chart = null;
 let sugActive = -1;
+
+const MONTH_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
 
 const COLORS = [
   '#2a4d3a','#b85c1a','#1a3a6b','#7a2060',
@@ -299,37 +418,40 @@ function hideSug() {
 // ── Investments ───────────────────────────────────────────────────────────────
 function addInvestment() {
   const ticker = tickerIn.value.trim().toUpperCase();
+  const month  = document.getElementById('monthIn').value;
   const year   = parseInt(document.getElementById('yearIn').value);
   const amount = parseFloat(document.getElementById('amountIn').value);
 
   if (!ticker)               return showError('Please enter a ticker symbol.');
   if (!DATA[ticker])         return showError(`"${ticker}" not found in the dataset.`);
   if (!year || year < 1970 || year > 2024) return showError('Year must be between 1970 and 2024.');
+  if (!/^\d{2}$/.test(month)) return showError('Please choose a valid start month.');
   if (!amount || amount <= 0) return showError('Please enter a valid amount.');
-
-  const key = `${ticker}_${year}_${amount}`;
-  if (investments.find(i => i.key === key)) return showError('Already added this combination.');
   if (investments.length >= 6)              return showError('Maximum 6 investments at once.');
 
   // Find the earliest available data point at or after the chosen year
-  const monthsAvail = Object.keys(DATA[ticker].data).filter(d => d.startsWith(year.toString()) || d > `${year}-12`);
   const allMonths   = Object.keys(DATA[ticker].data).sort();
-  const fromYear    = allMonths.find(d => d >= `${year}-01`);
+  const selectedMonth = `${year}-${month}`;
+  const fromMonth = allMonths.find(d => d >= selectedMonth);
 
-  if (!fromYear) {
-    const earliest = allMonths[0];
-    return showError(`${ticker} data only goes back to ${earliest.slice(0,4)}. Try a later start year.`);
+  if (!fromMonth) {
+    const latest = allMonths[allMonths.length - 1];
+    return showError(`${ticker} data only runs to ${fmtMonthYear(latest)}. Try an earlier start date.`);
   }
 
+  const key = `${ticker}_${fromMonth}_${amount}`;
+  if (investments.find(i => i.key === key)) return showError('Already added this combination.');
+
   investments.push({
-    ticker, year, amount, key,
+    ticker, year, month, amount, key,
     color: COLORS[investments.length % COLORS.length],
-    startMonth: fromYear,
+    startMonth: fromMonth,
   });
 
   tickerIn.value = '';
   hideSug();
   renderTags();
+  updateActionBar();
   renderResults();
 }
 
@@ -337,18 +459,76 @@ function removeInvestment(key) {
   investments = investments.filter(i => i.key !== key);
   investments.forEach((inv, i) => { inv.color = COLORS[i % COLORS.length]; });
   renderTags();
+  updateActionBar();
   if (!investments.length) clearAll();
   else renderResults();
+}
+
+function clearAllInvestments() {
+  investments = [];
+  renderTags();
+  updateActionBar();
+  clearAll();
+}
+
+function chooseForMe() {
+  // Clear existing investments first
+  investments = [];
+
+  // Get all available tickers
+  const allTickers = Object.keys(META);
+  if (allTickers.length === 0) return showError('No data available.');
+
+  // Pick 3-5 random tickers
+  const count = Math.floor(Math.random() * 3) + 3; // 3-5
+  const shuffled = allTickers.sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, Math.min(count, allTickers.length, 6));
+
+  // For each ticker, pick a random start date and add it
+  selected.forEach(ticker => {
+    const allMonths = Object.keys(DATA[ticker].data).sort();
+
+    // Pick a random month from available data (prefer earlier dates for better returns visibility)
+    const maxIdx = Math.min(allMonths.length - 1, Math.floor(allMonths.length * 0.7));
+    const randomIdx = Math.floor(Math.random() * maxIdx);
+    const fromMonth = allMonths[randomIdx];
+
+    const amount = 1000; // Default amount
+    const key = `${ticker}_${fromMonth}_${amount}`;
+
+    // Extract year and month from fromMonth
+    const [year, month] = fromMonth.split('-');
+
+    investments.push({
+      ticker,
+      year: parseInt(year),
+      month,
+      amount,
+      key,
+      color: COLORS[investments.length % COLORS.length],
+      startMonth: fromMonth,
+    });
+  });
+
+  renderTags();
+  updateActionBar();
+  renderResults();
 }
 
 function renderTags() {
   document.getElementById('tagsList').innerHTML = investments.map(inv =>
     `<span class="tag">
       <span class="tag-dot" style="background:${inv.color}"></span>
-      ${inv.ticker} ${inv.year} — ${fmt(inv.amount)}
+      ${inv.ticker} ${fmtMonthYear(inv.startMonth)} — ${fmt(inv.amount)}
+      <button class="tag-btn" onclick="findSimilar('${inv.ticker}', '${inv.startMonth}')" title="Find similar trends">🔍</button>
       <button class="tag-remove" onclick="removeInvestment('${inv.key}')">×</button>
     </span>`
   ).join('');
+}
+
+function updateActionBar() {
+  const actionBar = document.getElementById('actionBar');
+  actionBar.style.display = investments.length > 0 ? 'flex' : 'none';
 }
 
 // ── Results ───────────────────────────────────────────────────────────────────
@@ -381,7 +561,7 @@ function renderMetrics(results) {
     const m = results[0];
     grid.innerHTML = `
       <div class="metric-card">
-        <div class="metric-label">Invested in ${m.inv.year}</div>
+        <div class="metric-label">Invested in ${fmtMonthYear(m.inv.startMonth)}</div>
         <div class="metric-val">${fmt(m.inv.amount)}</div>
         <div class="metric-sub">${m.inv.ticker} · ${DATA[m.inv.ticker].name}</div>
       </div>
@@ -393,7 +573,7 @@ function renderMetrics(results) {
       <div class="metric-card">
         <div class="metric-label">Total return</div>
         <div class="metric-val" style="color:${m.pct >= 0 ? 'var(--gain)' : 'var(--loss)'}">${fmtPct(m.pct)}</div>
-        <div class="metric-sub">${m.inv.year} → now</div>
+        <div class="metric-sub">${fmtMonthYear(m.inv.startMonth)} → now</div>
       </div>`;
   } else {
     const totalIn  = results.reduce((s, r) => s + r.inv.amount, 0);
@@ -425,7 +605,7 @@ function renderLegend(results) {
   row.innerHTML = results.map(r =>
     `<span class="legend-item">
       <span class="tag-dot" style="background:${r.inv.color}"></span>
-      ${r.inv.ticker} ${r.inv.year} &nbsp;·&nbsp; ${fmtPct(r.pct)}
+      ${r.inv.ticker} ${fmtMonthYear(r.inv.startMonth)} &nbsp;·&nbsp; ${fmtPct(r.pct)}
     </span>`
   ).join('');
 }
@@ -439,7 +619,7 @@ function renderChart(results) {
     type: 'line',
     data: {
       datasets: results.map(r => ({
-        label: `${r.inv.ticker} (${r.inv.year})`,
+        label: `${r.inv.ticker} (${fmtMonthYear(r.inv.startMonth)})`,
         data: r.series,
         borderColor: r.inv.color,
         backgroundColor: r.inv.color + '14',
@@ -511,7 +691,206 @@ function fmt(n) {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(n);
 }
 
+function fmtMonthYear(value) {
+  const [year, month] = value.split('-').map(Number);
+  return MONTH_FORMATTER.format(new Date(Date.UTC(year, month - 1, 1)));
+}
+
 function fmtPct(n) { return (n >= 0 ? '+' : '') + n.toFixed(1) + '%'; }
+
+// ── Similarity Analysis ───────────────────────────────────────────────────────
+
+function findSimilar(ticker, startMonth) {
+  const modal = document.getElementById('similarModal');
+  const body = document.getElementById('similarBody');
+
+  // Show modal with loading state
+  modal.classList.add('show');
+  body.innerHTML = '<div class="modal-loading">Analyzing trends...</div>';
+
+  // Run analysis async so UI doesn't freeze
+  setTimeout(() => {
+    try {
+      const similar = calculateSimilarStocks(ticker, startMonth);
+      renderSimilarResults(ticker, startMonth, similar);
+    } catch (e) {
+      body.innerHTML = `<div class="modal-empty">Error analyzing trends: ${e.message}</div>`;
+    }
+  }, 10);
+}
+
+function calculateSimilarStocks(sourceTicker, startMonth) {
+  const sourceData = DATA[sourceTicker];
+  if (!sourceData) return [];
+
+  const sourceSector = META[sourceTicker]?.sector || 'Other';
+  const sourceMonths = Object.keys(sourceData.data).filter(m => m >= startMonth).sort();
+
+  if (sourceMonths.length < 6) return []; // Need at least 6 months for meaningful correlation
+
+  // Calculate normalized returns for source
+  const sourceReturns = calculateReturns(sourceData.data, sourceMonths);
+
+  // Compare against all other tickers
+  const results = [];
+
+  for (const [ticker, tickerData] of Object.entries(DATA)) {
+    if (ticker === sourceTicker) continue;
+
+    const tickerSector = META[ticker]?.sector || 'Other';
+
+    // Skip same sector (unless it's "Other")
+    if (sourceSector !== 'Other' && tickerSector === sourceSector) continue;
+
+    // Find overlapping time range
+    const tickerMonths = Object.keys(tickerData.data).sort();
+    const overlap = sourceMonths.filter(m => tickerMonths.includes(m));
+
+    if (overlap.length < 6) continue; // Need at least 6 overlapping months
+
+    // Calculate returns for this ticker over overlapping period
+    const tickerReturns = calculateReturns(tickerData.data, overlap);
+    const sourceOverlap = sourceReturns.filter((_, i) => overlap.includes(sourceMonths[i]));
+
+    // Calculate Pearson correlation
+    const correlation = pearsonCorrelation(sourceOverlap, tickerReturns);
+
+    if (correlation >= 0.6) { // Only show high correlations
+      results.push({
+        ticker,
+        name: tickerData.name,
+        sector: tickerSector,
+        correlation,
+        overlap: overlap.length,
+      });
+    }
+  }
+
+  // Sort by correlation descending
+  results.sort((a, b) => b.correlation - a.correlation);
+
+  return results.slice(0, 5); // Top 5
+}
+
+function calculateReturns(priceData, months) {
+  // Calculate percentage returns between consecutive months
+  const returns = [];
+  for (let i = 1; i < months.length; i++) {
+    const prev = priceData[months[i - 1]];
+    const curr = priceData[months[i]];
+    if (prev && curr && prev > 0) {
+      returns.push((curr - prev) / prev);
+    } else {
+      returns.push(0);
+    }
+  }
+  return returns;
+}
+
+function pearsonCorrelation(x, y) {
+  const n = Math.min(x.length, y.length);
+  if (n === 0) return 0;
+
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+
+  for (let i = 0; i < n; i++) {
+    sumX += x[i];
+    sumY += y[i];
+    sumXY += x[i] * y[i];
+    sumX2 += x[i] * x[i];
+    sumY2 += y[i] * y[i];
+  }
+
+  const numerator = (n * sumXY) - (sumX * sumY);
+  const denominator = Math.sqrt(((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)));
+
+  if (denominator === 0) return 0;
+  return numerator / denominator;
+}
+
+function renderSimilarResults(sourceTicker, startMonth, results) {
+  const body = document.getElementById('similarBody');
+
+  if (results.length === 0) {
+    body.innerHTML = `
+      <div class="modal-source">
+        Analyzing <span class="modal-source-ticker">${sourceTicker}</span> from ${fmtMonthYear(startMonth)}
+      </div>
+      <div class="modal-empty">
+        No similar stocks found from different sectors.<br>
+        Try a stock with more historical data.
+      </div>
+    `;
+    return;
+  }
+
+  const sourceName = DATA[sourceTicker]?.name || sourceTicker;
+  const sourceSector = META[sourceTicker]?.sector || 'Other';
+
+  body.innerHTML = `
+    <div class="modal-source">
+      Stocks with similar trends to <span class="modal-source-ticker">${sourceTicker}</span>
+      (${sourceName}, ${sourceSector}) from ${fmtMonthYear(startMonth)}:
+    </div>
+    <div class="similar-list">
+      ${results.map(r => `
+        <div class="similar-item">
+          <div class="similar-info">
+            <div class="similar-ticker">${r.ticker}</div>
+            <div class="similar-meta">${r.name} · ${r.sector}</div>
+          </div>
+          <div class="similar-correlation">${Math.round(r.correlation * 100)}%</div>
+          <button class="similar-add-btn" onclick="addSimilarStock('${r.ticker}', '${startMonth}')">
+            Add
+          </button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function addSimilarStock(ticker, startMonth) {
+  // Use the same start month as the source investment
+  const amount = 1000; // Default amount
+
+  if (!DATA[ticker]) return showError(`"${ticker}" not found in the dataset.`);
+  if (investments.length >= 6) return showError('Maximum 6 investments at once.');
+
+  const allMonths = Object.keys(DATA[ticker].data).sort();
+  const fromMonth = allMonths.find(d => d >= startMonth);
+
+  if (!fromMonth) {
+    const latest = allMonths[allMonths.length - 1];
+    return showError(`${ticker} data only runs to ${fmtMonthYear(latest)}.`);
+  }
+
+  const key = `${ticker}_${fromMonth}_${amount}`;
+  if (investments.find(i => i.key === key)) {
+    closeSimilarModal();
+    return showError('Already added this combination.');
+  }
+
+  const [year, month] = fromMonth.split('-');
+
+  investments.push({
+    ticker,
+    year: parseInt(year),
+    month,
+    amount,
+    key,
+    color: COLORS[investments.length % COLORS.length],
+    startMonth: fromMonth,
+  });
+
+  renderTags();
+  updateActionBar();
+  renderResults();
+  closeSimilarModal();
+}
+
+function closeSimilarModal() {
+  document.getElementById('similarModal').classList.remove('show');
+}
 
 // ── Go ────────────────────────────────────────────────────────────────────────
 boot();

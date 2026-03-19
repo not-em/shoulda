@@ -13,7 +13,7 @@ from datetime import datetime
 
 # ── Ticker list ────────────────────────────────────────────────────────────────
 
-from tickers import ALL_TICKERS
+from tickers import ALL_TICKERS, SECTORS
 
 # ── Download ───────────────────────────────────────────────────────────────────
 
@@ -80,7 +80,7 @@ def download_all(tickers: dict, batch_size: int = 50) -> dict:
 
 
 def build_meta(data: dict) -> dict:
-    """Build a lightweight search index: ticker → name + date range."""
+    """Build a lightweight search index: ticker → name + date range + sector."""
     meta = {}
     for ticker, info in data.items():
         dates = list(info["data"].keys())
@@ -90,6 +90,7 @@ def build_meta(data: dict) -> dict:
             "name": info["name"],
             "from": min(dates),
             "to": max(dates),
+            "sector": SECTORS.get(ticker, "Other"),
         }
     return meta
 

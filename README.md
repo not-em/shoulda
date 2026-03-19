@@ -2,11 +2,8 @@
 
 Pick a year, a stock, and an amount and see what you could've earned.
 
----
-
-## Customising the ticker list
-
 Edit `ticker.py` to change the list of tickers. 
+
 ---
 
 ## File structure
