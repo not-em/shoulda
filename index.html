@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>shoulda</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #f4f1e8;
+  --surface:    #fdfcf7;
+  --surface2:   #edeae0;
+  --border:     rgba(50,40,20,0.11);
+  --border-mid: rgba(50,40,20,0.22);
+  --text:       #18140d;
+  --text2:      #5c5040;
+  --text3:      #9c8c78;
+  --accent:     #2a4d3a;
+  --gain:       #1a5c32;
+  --gain-bg:    #eaf4ee;
+  --loss:       #8c2020;
+  --loss-bg:    #faeaea;
+  --mono:       'DM Mono', 'Courier New', monospace;
+  --serif:      'Fraunces', Georgia, serif;
+}
+
+body {
+  font-family: var(--mono);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+/* ── Header ── */
+header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-mid); }
+header h1 { font-family: var(--serif); font-size: 2.6rem; font-weight: 300; font-style: italic; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 0.35rem; }
+header p { font-size: 0.78rem; color: var(--text2); letter-spacing: 0.04em; }
+
+/* ── Loading screen ── */
+#loadScreen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 4rem 0; gap: 1rem; color: var(--text2); font-size: 0.8rem; letter-spacing: 0.06em;
+}
+.spinner {
+  width: 28px; height: 28px; border: 2px solid var(--border-mid);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Add panel ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+.panel-label { font-size: 0.67rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 0.9rem; }
+
+.add-grid { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: flex-end; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 0.67rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text2); }
+
+/* ticker autocomplete wrapper */
+.ticker-wrap { position: relative; }
+#suggestions {
+  position: absolute; top: calc(100% + 2px); left: 0; right: 0; z-index: 100;
+  background: var(--surface); border: 1px solid var(--border-mid); border-radius: 3px;
+  max-height: 220px; overflow-y: auto; display: none;
+}
+.suggestion {
+  padding: 7px 10px; font-size: 0.8rem; cursor: pointer;
+  display: flex; justify-content: space-between; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.suggestion:last-child { border-bottom: none; }
+.suggestion:hover, .suggestion.active { background: var(--surface2); }
+.sug-ticker { font-weight: 500; color: var(--text); }
+.sug-name { color: var(--text3); font-size: 0.72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+input[type="text"], input[type="number"] {
+  font-family: var(--mono); font-size: 0.88rem;
+  background: var(--bg); border: 1px solid var(--border-mid); border-radius: 3px;
+  padding: 8px 10px; color: var(--text); outline: none;
+  transition: border-color 0.15s; width: 100%;
+}
+input:focus { border-color: var(--accent); }
+
+button.add-btn {
+  font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.04em;
+  background: var(--accent); color: #fff; border: none; border-radius: 3px;
+  padding: 9px 18px; cursor: pointer; white-space: nowrap;
+  transition: opacity 0.15s; height: 36px;
+}
+button.add-btn:hover { opacity: 0.85; }
+button.add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Tags ── */
+.tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; min-height: 4px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem;
+  padding: 4px 10px 4px 8px; border-radius: 2px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+}
+.tag-dot { width: 8px; height: 8px; border-radius: 1px; flex-shrink: 0; }
+.tag-remove { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 1rem; line-height: 1; padding: 0 0 0 2px; font-family: var(--mono); }
+.tag-remove:hover { color: var(--loss); }
+
+/* ── Error / info ── */
+.error-bar {
+  font-size: 0.78rem; background: var(--loss-bg); color: var(--loss);
+  border: 1px solid rgba(140,32,32,0.15); border-radius: 3px;
+  padding: 8px 12px; margin-bottom: 1rem; display: none;
+}
+
+/* ── Metrics ── */
+.metrics-grid { display: none; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 1rem 1.1rem; }
+.metric-label { font-size: 0.67rem; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+.metric-val { font-family: var(--serif); font-size: 1.65rem; font-weight: 300; color: var(--text); line-height: 1; margin-bottom: 4px; }
+.metric-sub { font-size: 0.73rem; color: var(--text2); }
+.metric-sub.gain { color: var(--gain); }
+.metric-sub.loss { color: var(--loss); }
+
+hr.divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; display: none; }
+
+/* ── Chart ── */
+.legend-row { display: none; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; font-size: 0.72rem; color: var(--text2); }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.chart-wrap { position: relative; width: 100%; height: 360px; display: none; }
+
+/* ── Footer note ── */
+.note { font-size: 0.67rem; color: var(--text3); margin-top: 1.25rem; letter-spacing: 0.03em; display: none; line-height: 1.6; }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .add-grid { grid-template-columns: 1fr 1fr; }
+  .add-grid .ticker-wrap { grid-column: span 2; }
+  .add-grid button { grid-column: span 2; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  header h1 { font-size: 1.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>shoulda</h1>
+    <p>Pick a year, an amount, and a stock. See what you could've won.</p>
+  </header>
+
+  <div id="loadScreen">
+    <div class="spinner"></div>
+    <span>Loading price data…</span>
+  </div>
+
+  <div id="appContent" style="display:none;">
+
+    <div class="panel">
+      <div class="panel-label">Add an investment</div>
+      <div class="add-grid">
+        <div class="field">
+          <label>Ticker or company name</label>
+          <div class="ticker-wrap">
+            <input type="text" id="tickerIn" placeholder="e.g. AAPL, Apple, S&P 500…" autocomplete="off" />
+            <div id="suggestions"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Start year</label>
+          <input type="number" id="yearIn" min="1970" max="2024" value="2010" />
+        </div>
+        <div class="field">
+          <label>Amount (£)</label>
+          <input type="number" id="amountIn" min="1" value="1000" />
+        </div>
+        <button class="add-btn" id="addBtn" onclick="addInvestment()">Add →</button>
+      </div>
+    </div>
+
+    <div class="tags-row" id="tagsList"></div>
+    <div class="error-bar" id="errMsg"></div>
+
+    <div class="metrics-grid" id="metricsGrid"></div>
+    <hr class="divider" id="divider" />
+    <div class="legend-row" id="legendRow"></div>
+    <div class="chart-wrap" id="chartWrap"><canvas id="itmChart"></canvas></div>
+    <p class="note" id="noteText">
+      Data downloaded from Yahoo Finance via yfinance. Monthly closing prices, adjusted for splits and dividends.
+      Earliest available date varies by ticker. For illustrative purposes only — not financial advice.
+    </p>
+
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let DATA = {};       // full price data: { ticker: { name, data: { "YYYY-MM": price } } }
+let META = {};       // lightweight: { ticker: { name, from, to } }
+let investments = [];
+let chart = null;
+let sugActive = -1;
+
+const COLORS = [
+  '#2a4d3a','#b85c1a','#1a3a6b','#7a2060',
+  '#4a7a1a','#8c2020','#1a5c6b','#5c4a1a',
+];
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+async function boot() {
+  try {
+    const [dataRes, metaRes] = await Promise.all([
+      fetch('data.json'),
+      fetch('meta.json'),
+    ]);
+    DATA = await dataRes.json();
+    META = await metaRes.json();
+    document.getElementById('loadScreen').style.display = 'none';
+    document.getElementById('appContent').style.display = 'block';
+  } catch (e) {
+    document.getElementById('loadScreen').innerHTML =
+      `<p style="color:#8c2020;font-size:0.82rem;">Could not load data.json / meta.json.<br>Make sure you've run <code>download_data.py</code> first.</p>`;
+  }
+}
+
+// ── Autocomplete ─────────────────────────────────────────────────────────────
+const tickerIn = document.getElementById('tickerIn');
+const sugBox   = document.getElementById('suggestions');
+
+tickerIn.addEventListener('input', () => {
+  const q = tickerIn.value.trim().toUpperCase();
+  if (q.length < 1) { hideSug(); return; }
+  const matches = Object.entries(META)
+    .filter(([t, m]) => t.includes(q) || m.name.toUpperCase().includes(q))
+    .slice(0, 10);
+  if (!matches.length) { hideSug(); return; }
+  sugBox.innerHTML = matches.map(([t, m], i) =>
+    `<div class="suggestion" data-ticker="${t}" data-idx="${i}">
+      <span class="sug-ticker">${t}</span>
+      <span class="sug-name">${m.name} &nbsp;·&nbsp; ${m.from.slice(0,4)}–${m.to.slice(0,4)}</span>
+    </div>`
+  ).join('');
+  sugActive = -1;
+  sugBox.style.display = 'block';
+});
+
+tickerIn.addEventListener('keydown', e => {
+  const items = sugBox.querySelectorAll('.suggestion');
+  if (e.key === 'ArrowDown') { e.preventDefault(); moveSug(items, 1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); moveSug(items, -1); }
+  else if (e.key === 'Enter') {
+    if (sugActive >= 0 && items[sugActive]) {
+      selectSug(items[sugActive].dataset.ticker);
+    } else {
+      addInvestment();
+    }
+  } else if (e.key === 'Escape') { hideSug(); }
+});
+
+sugBox.addEventListener('mousedown', e => {
+  const el = e.target.closest('.suggestion');
+  if (el) selectSug(el.dataset.ticker);
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.ticker-wrap')) hideSug();
+});
+
+function moveSug(items, dir) {
+  if (!items.length) return;
+  items[sugActive]?.classList.remove('active');
+  sugActive = Math.max(0, Math.min(items.length - 1, sugActive + dir));
+  items[sugActive].classList.add('active');
+  items[sugActive].scrollIntoView({ block: 'nearest' });
+}
+
+function selectSug(ticker) {
+  tickerIn.value = ticker;
+  hideSug();
+}
+
+function hideSug() {
+  sugBox.style.display = 'none';
+  sugActive = -1;
+}
+
+// ── Investments ───────────────────────────────────────────────────────────────
+function addInvestment() {
+  const ticker = tickerIn.value.trim().toUpperCase();
+  const year   = parseInt(document.getElementById('yearIn').value);
+  const amount = parseFloat(document.getElementById('amountIn').value);
+
+  if (!ticker)               return showError('Please enter a ticker symbol.');
+  if (!DATA[ticker])         return showError(`"${ticker}" not found in the dataset.`);
+  if (!year || year < 1970 || year > 2024) return showError('Year must be between 1970 and 2024.');
+  if (!amount || amount <= 0) return showError('Please enter a valid amount.');
+
+  const key = `${ticker}_${year}_${amount}`;
+  if (investments.find(i => i.key === key)) return showError('Already added this combination.');
+  if (investments.length >= 6)              return showError('Maximum 6 investments at once.');
+
+  // Find the earliest available data point at or after the chosen year
+  const monthsAvail = Object.keys(DATA[ticker].data).filter(d => d.startsWith(year.toString()) || d > `${year}-12`);
+  const allMonths   = Object.keys(DATA[ticker].data).sort();
+  const fromYear    = allMonths.find(d => d >= `${year}-01`);
+
+  if (!fromYear) {
+    const earliest = allMonths[0];
+    return showError(`${ticker} data only goes back to ${earliest.slice(0,4)}. Try a later start year.`);
+  }
+
+  investments.push({
+    ticker, year, amount, key,
+    color: COLORS[investments.length % COLORS.length],
+    startMonth: fromYear,
+  });
+
+  tickerIn.value = '';
+  hideSug();
+  renderTags();
+  renderResults();
+}
+
+function removeInvestment(key) {
+  investments = investments.filter(i => i.key !== key);
+  investments.forEach((inv, i) => { inv.color = COLORS[i % COLORS.length]; });
+  renderTags();
+  if (!investments.length) clearAll();
+  else renderResults();
+}
+
+function renderTags() {
+  document.getElementById('tagsList').innerHTML = investments.map(inv =>
+    `<span class="tag">
+      <span class="tag-dot" style="background:${inv.color}"></span>
+      ${inv.ticker} ${inv.year} — ${fmt(inv.amount)}
+      <button class="tag-remove" onclick="removeInvestment('${inv.key}')">×</button>
+    </span>`
+  ).join('');
+}
+
+// ── Results ───────────────────────────────────────────────────────────────────
+function renderResults() {
+  const results = investments.map(inv => {
+    const priceData = DATA[inv.ticker].data;
+    const months = Object.keys(priceData).filter(d => d >= inv.startMonth).sort();
+    if (!months.length) return null;
+    const base = priceData[months[0]];
+    const series = months.map(m => ({ x: new Date(m + '-01'), y: parseFloat(((priceData[m] / base) * inv.amount).toFixed(2)) }));
+    const finalVal = series[series.length - 1].y;
+    const gain = finalVal - inv.amount;
+    const pct  = (gain / inv.amount) * 100;
+    return { inv, series, finalVal, gain, pct };
+  }).filter(Boolean);
+
+  if (!results.length) return;
+  renderMetrics(results);
+  renderLegend(results);
+  renderChart(results);
+  document.getElementById('divider').style.display = 'block';
+  document.getElementById('noteText').style.display = 'block';
+}
+
+function renderMetrics(results) {
+  const grid = document.getElementById('metricsGrid');
+  grid.style.display = 'grid';
+
+  if (results.length === 1) {
+    const m = results[0];
+    grid.innerHTML = `
+      <div class="metric-card">
+        <div class="metric-label">Invested in ${m.inv.year}</div>
+        <div class="metric-val">${fmt(m.inv.amount)}</div>
+        <div class="metric-sub">${m.inv.ticker} · ${DATA[m.inv.ticker].name}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Value today</div>
+        <div class="metric-val">${fmt(m.finalVal)}</div>
+        <div class="metric-sub ${m.gain >= 0 ? 'gain' : 'loss'}">${m.gain >= 0 ? '+' : ''}${fmt(m.gain)}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Total return</div>
+        <div class="metric-val" style="color:${m.pct >= 0 ? 'var(--gain)' : 'var(--loss)'}">${fmtPct(m.pct)}</div>
+        <div class="metric-sub">${m.inv.year} → now</div>
+      </div>`;
+  } else {
+    const totalIn  = results.reduce((s, r) => s + r.inv.amount, 0);
+    const totalNow = results.reduce((s, r) => s + r.finalVal, 0);
+    const totalGain = totalNow - totalIn;
+    const totalPct  = (totalGain / totalIn) * 100;
+    const best = results.reduce((a, b) => b.pct > a.pct ? b : a);
+    grid.innerHTML = `
+      <div class="metric-card">
+        <div class="metric-label">Total invested</div>
+        <div class="metric-val">${fmt(totalIn)}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Portfolio today</div>
+        <div class="metric-val">${fmt(totalNow)}</div>
+        <div class="metric-sub ${totalGain >= 0 ? 'gain' : 'loss'}">${totalGain >= 0 ? '+' : ''}${fmt(totalGain)} &nbsp;(${fmtPct(totalPct)})</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Best performer</div>
+        <div class="metric-val">${best.inv.ticker}</div>
+        <div class="metric-sub gain">${fmtPct(best.pct)}</div>
+      </div>`;
+  }
+}
+
+function renderLegend(results) {
+  const row = document.getElementById('legendRow');
+  row.style.display = 'flex';
+  row.innerHTML = results.map(r =>
+    `<span class="legend-item">
+      <span class="tag-dot" style="background:${r.inv.color}"></span>
+      ${r.inv.ticker} ${r.inv.year} &nbsp;·&nbsp; ${fmtPct(r.pct)}
+    </span>`
+  ).join('');
+}
+
+function renderChart(results) {
+  const wrap = document.getElementById('chartWrap');
+  wrap.style.display = 'block';
+  if (chart) chart.destroy();
+
+  chart = new Chart(document.getElementById('itmChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      datasets: results.map(r => ({
+        label: `${r.inv.ticker} (${r.inv.year})`,
+        data: r.series,
+        borderColor: r.inv.color,
+        backgroundColor: r.inv.color + '14',
+        borderWidth: 1.5,
+        pointRadius: 0,
+        tension: 0.3,
+        fill: false,
+      }))
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#fdfcf7',
+          borderColor: 'rgba(50,40,20,0.18)',
+          borderWidth: 1,
+          titleColor: '#18140d',
+          bodyColor: '#5c5040',
+          titleFont: { family: "'DM Mono', monospace", size: 11 },
+          bodyFont: { family: "'DM Mono', monospace", size: 11 },
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: { unit: 'year', displayFormats: { year: 'yyyy' } },
+          grid: { color: 'rgba(50,40,20,0.06)' },
+          ticks: { color: '#9c8c78', font: { family: "'DM Mono', monospace", size: 11 }, maxTicksLimit: 12 }
+        },
+        y: {
+          grid: { color: 'rgba(50,40,20,0.06)' },
+          ticks: {
+            color: '#9c8c78',
+            font: { family: "'DM Mono', monospace", size: 11 },
+            callback: v => new Intl.NumberFormat('en-GB', {
+              style: 'currency', currency: 'GBP', notation: 'compact', maximumFractionDigits: 1
+            }).format(v)
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function clearAll() {
+  document.getElementById('metricsGrid').style.display = 'none';
+  document.getElementById('divider').style.display = 'none';
+  document.getElementById('chartWrap').style.display = 'none';
+  document.getElementById('legendRow').style.display = 'none';
+  document.getElementById('noteText').style.display = 'none';
+  if (chart) { chart.destroy(); chart = null; }
+}
+
+function showError(msg) {
+  const el = document.getElementById('errMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+function fmt(n) {
+  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(n);
+}
+
+function fmtPct(n) { return (n >= 0 ? '+' : '') + n.toFixed(1) + '%'; }
+
+// ── Go ────────────────────────────────────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>
